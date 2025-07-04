@@ -1,20 +1,22 @@
 import React from 'react';
 import { Link, NavLink } from 'react-router-dom';
+import { useUserPreferences } from './context/UserPreferencesContext'; // Ganti path sesuai project mu
 
 const Navbar = () => {
-  const linkClass =
-    'px-4 py-2 rounded hover:bg-grey-400 hover:text-white transition-colors';
+  const { isDarkMode, toggleDarkMode } = useUserPreferences();
 
-  const activeClass =
-    'bg-white text-white';
+  const linkClass =
+    'px-4 py-2 rounded hover:bg-gray-400 hover:text-white transition-colors';
+
+  const activeClass = 'bg-white text-black';
 
   return (
-    <nav className="w-full bg-gray-200 dark:bg-gray-800 text-gray-800 dark:text-gray-100 shadow-md">
+    <nav className={`w-full ${isDarkMode ? 'bg-gray-800 text-gray-100' : 'bg-gray-200 text-gray-800'} shadow-md`}>
       <div className="container mx-auto px-4 py-3 flex justify-between items-center">
         <div className="text-xl font-bold">
           <Link to="/">Transaksiku</Link>
         </div>
-        <div className="flex space-x-4">
+        <div className="flex space-x-4 items-center">
           <NavLink
             to="/"
             className={({ isActive }) =>
@@ -55,6 +57,14 @@ const Navbar = () => {
           >
             Profil
           </NavLink>
+
+          {/* Toggle Dark Mode */}
+          <button
+            onClick={toggleDarkMode}
+            className="ml-4 px-3 py-2 text-black"
+          >
+            {isDarkMode ? '☀️ Light' : '🌙 Dark'}
+          </button>
         </div>
       </div>
     </nav>
