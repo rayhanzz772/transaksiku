@@ -1,4 +1,3 @@
-// router.js
 import React from 'react';
 import { createBrowserRouter, Outlet } from 'react-router-dom';
 
@@ -9,48 +8,47 @@ import Transfer from '../features/Transfer/pages/Transfer';
 import Profile from '../features/Profile/pages/Profile';
 import Navbar from '../Navbar';
 
-import ErrorBoundary from '../components/ErrorBoundary'; // 👉 Import
+import ErrorBoundary from '../components/ErrorBoundary';
+import RenderRoute from './RenderRoute'; // ✅ Import
 
-const RootLayout = () => {
-  return (
-    <>
-      <Navbar />
-      <div className="p-4">
-        <Outlet />
-      </div>
-    </>
-  );
-};
+const RootLayout = () => (
+  <>
+    <Navbar />
+    <div className="p-4">
+      <Outlet />
+    </div>
+  </>
+);
 
 const router = createBrowserRouter([
   {
     path: '/',
     element: <RootLayout />,
-    errorElement: <ErrorBoundary />, // ✅ Pasang di Root
+    errorElement: <ErrorBoundary />,
     children: [
       {
         index: true,
-        element: <Dashboard />,
-        errorElement: <ErrorBoundary />, // ✅ Pasang di Child juga kalau mau
+        element: <RenderRoute render={() => <Dashboard />} />,
+        errorElement: <ErrorBoundary />,
       },
       {
         path: 'manajemenrekening',
-        element: <ManajemenRekening />,
+        element: <RenderRoute render={() => <ManajemenRekening />} />,
         errorElement: <ErrorBoundary />,
       },
       {
         path: 'laporantransaksi',
-        element: <LaporanTransaksi />,
+        element: <RenderRoute render={() => <LaporanTransaksi />} />,
         errorElement: <ErrorBoundary />,
       },
       {
         path: 'transfer',
-        element: <Transfer />,
+        element: <RenderRoute render={() => <Transfer />} />,
         errorElement: <ErrorBoundary />,
       },
       {
         path: 'profile',
-        element: <Profile />,
+        element: <RenderRoute render={() => <Profile />} />,
         errorElement: <ErrorBoundary />,
       },
     ],
