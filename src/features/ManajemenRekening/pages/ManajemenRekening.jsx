@@ -1,18 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-
-// --- Dummy Data ---
-const initialAccounts = [
-  { id: 'acc1', name: 'Rekening Utama', number: '1234567890', bank: 'Bank ABC', addedDate: '2023-01-15T10:00:00Z' },
-  { id: 'acc2', name: 'Tabungan Keluarga', number: '0987654321', bank: 'Bank DEF', addedDate: '2023-03-20T11:30:00Z' },
-  { id: 'acc3', name: 'Investasi Saham', number: '1122334455', bank: 'Bank XYZ', addedDate: '2023-05-01T09:00:00Z' },
-  { id: 'acc4', name: 'Dana Darurat', number: '5544332211', bank: 'Bank ABC', addedDate: '2023-02-10T14:00:00Z' },
-  { id: 'acc5', name: 'Pembayaran Online', number: '9988776655', bank: 'E-Wallet A', addedDate: '2023-06-25T16:00:00Z' },
-  { id: 'acc6', name: 'Gaji Bulanan', number: '1029384756', bank: 'Bank DEF', addedDate: '2023-04-12T08:00:00Z' },
-  { id: 'acc7', name: 'Rekening Bisnis', number: '6789012345', bank: 'Bank XYZ', addedDate: '2023-07-01T13:00:00Z' },
-  { id: 'acc8', name: 'Pulsa & Data', number: '1112223334', bank: 'Telco Bank', addedDate: '2023-08-10T10:00:00Z' },
-];
-
-const banks = ['All Banks', 'Bank ABC', 'Bank DEF', 'Bank XYZ', 'E-Wallet A', 'Telco Bank'];
+import { useManajemenData } from '../hooks/useManajemenData';
+import { useManajemenRekening } from '../hooks/useManajemenRekening';
 
 // --- Generic Modal Component ---
 const Modal = ({ isOpen, onClose, title, children }) => {
@@ -88,8 +76,9 @@ const AccountFormModal = ({ isOpen, onClose, onSubmit, editingAccount, existingA
       newErrors.number = 'Nomor rekening harus berupa angka.';
     }
 
-    // Uniqueness validation
-    const isNumberUnique = existingAccounts.every(acc =>
+    // Uniqueness validation (SAFE)
+    const safeAccounts = Array.isArray(existingAccounts) ? existingAccounts : [];
+    const isNumberUnique = safeAccounts.every(acc =>
       acc.id === editingAccount?.id || acc.number !== number.trim()
     );
     if (!isNumberUnique) {
@@ -172,141 +161,35 @@ const AccountFormModal = ({ isOpen, onClose, onSubmit, editingAccount, existingA
 
 // --- Main ManajemenRekening Component ---
 const ManajemenRekening = () => {
-  const [accounts, setAccounts] = useState(initialAccounts);
+  const { data, isLoading, isError } = useManajemenData();
+  const {
+    banks,
+    currentAccounts,
+    totalPages,
+    searchTerm,
+    filterBank,
+    selectedAccounts,
+    sortBy,
+    sortOrder,
+    addAccount,
+    updateAccount,
+    deleteAccount,
+    bulkDeleteAccounts,
+    setSearchTerm,
+    setFilterBank,
+    setSortBy,
+    setSortOrder,
+    setSelectedAccounts,
+    currentPage,
+    setCurrentPage,
+  } = useManajemenRekening(data);
+
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [editingAccount, setEditingAccount] = useState(null);
   const [isConfirmationModalOpen, setIsConfirmationModalOpen] = useState(false);
   const [accountToDelete, setAccountToDelete] = useState(null);
-  const [selectedAccounts, setSelectedAccounts] = useState([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterBank, setFilterBank] = useState('All Banks');
-  const [sortBy, setSortBy] = useState('addedDate');
-  const [sortOrder, setSortOrder] = useState('desc'); // 'asc' or 'desc'
-  const [currentPage, setCurrentPage] = useState(1);
-  const accountsPerPage = 5;
 
-  // --- Debounced Search Term ---
-  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(searchTerm);
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedSearchTerm(searchTerm);
-    }, 500); // 500ms debounce
-    return () => {
-      clearTimeout(handler);
-    };
-  }, [searchTerm]);
-
-  // --- Filtered and Sorted Accounts ---
-  const filteredAccounts = accounts.filter(account => {
-    const matchesSearch = debouncedSearchTerm
-      ? account.name.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
-        account.bank.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
-      : true;
-    const matchesFilter = filterBank === 'All Banks' ? true : account.bank === filterBank;
-    return matchesSearch && matchesFilter;
-  });
-
-  const sortedAccounts = [...filteredAccounts].sort((a, b) => {
-    let valA, valB;
-    if (sortBy === 'addedDate') {
-      valA = new Date(a.addedDate);
-      valB = new Date(b.addedDate);
-    } else {
-      valA = a[sortBy].toLowerCase();
-      valB = b[sortBy].toLowerCase();
-    }
-
-    if (valA < valB) return sortOrder === 'asc' ? -1 : 1;
-    if (valA > valB) return sortOrder === 'asc' ? 1 : -1;
-    return 0;
-  });
-
-  // --- Pagination Logic ---
-  const indexOfLastAccount = currentPage * accountsPerPage;
-  const indexOfFirstAccount = indexOfLastAccount - accountsPerPage;
-  const currentAccounts = sortedAccounts.slice(indexOfFirstAccount, indexOfLastAccount);
-  const totalPages = Math.ceil(sortedAccounts.length / accountsPerPage);
-
-  const paginate = (pageNumber) => setCurrentPage(pageNumber);
-
-  // --- CRUD Operations (Simulating React Query Mutations) ---
-
-  // Simulate API call delay
-  const simulateApiCall = (data) => {
-    return new Promise(resolve => setTimeout(() => resolve(data), 500));
-  };
-
-  // Add Account
-  const addAccount = async (newAccount) => {
-    // Optimistic update
-    setAccounts(prev => [...prev, { ...newAccount, id: crypto.randomUUID() }]);
-    try {
-      // Simulate API call
-      await simulateApiCall(newAccount);
-      // In a real app, you'd get the actual ID from the backend and update
-      // setAccounts(prev => prev.map(acc => acc.tempId === newAccount.tempId ? { ...acc, id: backendId } : acc));
-      console.log('Account added successfully (simulated)');
-    } catch (error) {
-      console.error('Failed to add account (simulated):', error);
-      // Revert optimistic update if API fails
-      setAccounts(prev => prev.filter(acc => acc.id !== newAccount.id));
-    }
-  };
-
-  // Update Account
-  const updateAccount = async (updatedAccount) => {
-    // Optimistic update
-    setAccounts(prev => prev.map(acc => acc.id === updatedAccount.id ? updatedAccount : acc));
-    try {
-      // Simulate API call
-      await simulateApiCall(updatedAccount);
-      console.log('Account updated successfully (simulated)');
-    } catch (error) {
-      console.error('Failed to update account (simulated):', error);
-      // Revert optimistic update if API fails (would need to store original account state)
-    }
-  };
-
-  // Delete Account
-  const deleteAccount = async (id) => {
-    // Optimistic update
-    const originalAccounts = accounts;
-    setAccounts(prev => prev.filter(acc => acc.id !== id));
-    try {
-      // Simulate API call
-      await simulateApiCall({ id });
-      console.log('Account deleted successfully (simulated)');
-    } catch (error) {
-      console.error('Failed to delete account (simulated):', error);
-      // Revert optimistic update if API fails
-      setAccounts(originalAccounts);
-    } finally {
-      setIsConfirmationModalOpen(false);
-      setAccountToDelete(null);
-      setSelectedAccounts(prev => prev.filter(accId => accId !== id)); // Deselect if deleted
-    }
-  };
-
-  // Bulk Delete Accounts
-  const bulkDeleteAccounts = async () => {
-    // Optimistic update
-    const originalAccounts = accounts;
-    setAccounts(prev => prev.filter(acc => !selectedAccounts.includes(acc.id)));
-    try {
-      // Simulate API call
-      await simulateApiCall({ ids: selectedAccounts });
-      console.log('Bulk accounts deleted successfully (simulated)');
-    } catch (error) {
-      console.error('Failed to bulk delete accounts (simulated):', error);
-      // Revert optimistic update if API fails
-      setAccounts(originalAccounts);
-    } finally {
-      setIsConfirmationModalOpen(false);
-      setSelectedAccounts([]); // Clear selections after bulk delete
-    }
-  };
-
-  // --- Handlers ---
+// --- Handlers ---
   const handleAddClick = () => {
     setEditingAccount(null);
     setIsFormModalOpen(true);
@@ -328,6 +211,10 @@ const ManajemenRekening = () => {
     } else if (selectedAccounts.length > 0) {
       bulkDeleteAccounts();
     }
+
+      // Tutup modal setelah hapus
+  setIsConfirmationModalOpen(false);
+  setAccountToDelete(null);
   };
 
   const handleCheckboxChange = (id) => {
@@ -353,7 +240,10 @@ const ManajemenRekening = () => {
     }
   };
 
-  return (
+  if (isLoading) return <div>Loading...</div>;
+  if (isError) return <div>Error loading data...</div>;
+
+ return (
     <div className="min-h-screen bg-gray-100 p-4 font-inter">
       <div className="container mx-auto p-6 bg-white rounded-xl shadow-lg">
         <h1 className="text-3xl font-bold text-gray-800 mb-8 text-center">Manajemen Rekening Tersimpan</h1>
@@ -521,7 +411,7 @@ const ManajemenRekening = () => {
           onClose={() => setIsFormModalOpen(false)}
           onSubmit={editingAccount ? updateAccount : addAccount}
           editingAccount={editingAccount}
-          existingAccounts={accounts}
+          existingAccounts={data}
         />
 
         <ConfirmationModal
