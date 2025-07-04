@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { manajemenDummy } from '../data/manajemenDummy';
+import { manajemenDummy } from '../../../utils/DummyData'
 
 export const useManajemenData = () => {
   return useQuery({

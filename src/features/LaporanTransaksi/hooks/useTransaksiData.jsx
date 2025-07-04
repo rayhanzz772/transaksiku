@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { transaksiDummy } from '../data/TransaksiDummy';
+import { transaksiDummy } from '../../../utils/DummyData'
 
 export const useTransaksiData = () => {
   return useQuery({

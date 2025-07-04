@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { transferDummy } from '../data/transferDummy';
+import { transferDummy } from '../../../utils/DummyData'
 
 export const useTransferData = () => {
   return useQuery({

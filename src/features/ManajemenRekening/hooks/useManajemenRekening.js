@@ -56,30 +56,92 @@ export function useManajemenRekening(data) {
   const currentAccounts = sortedAccounts.slice(indexOfFirstAccount, indexOfLastAccount);
   const totalPages = Math.ceil(sortedAccounts.length / accountsPerPage);
 
-  // CRUD Simulasi
-  const addAccount = async (newAccount) => {
-    setAccounts((prev) => [...prev, newAccount]);
+// Simulasi API call
+const simulateApiCall = (data) => {
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      const failRandomly = Math.random() < 0.2; // 20% error simulasi
+      if (failRandomly) {
+        reject(new Error('API gagal!'));
+      } else {
+        resolve(data);
+      }
+    }, 1000);
+  });
+};
+
+// ✅ Optimistic Add
+const addAccount = async (newAccount) => {
+  const prevAccounts = accounts; // backup
+  setAccounts((prev) => [...prev, newAccount]);
+
+  try {
     await simulateApiCall(newAccount);
-  };
+    console.log('Berhasil simpan ke server');
+  } catch (error) {
+    console.error('Gagal simpan:', error);
+    // Rollback:
+    setAccounts(prevAccounts);
+    alert('Gagal menambah rekening. Perubahan dibatalkan.');
+  }
+};
 
-  const updateAccount = async (updatedAccount) => {
-    setAccounts((prev) =>
-      prev.map((acc) => (acc.id === updatedAccount.id ? updatedAccount : acc))
-    );
+// ✅ Optimistic Update
+const updateAccount = async (updatedAccount) => {
+  const prevAccounts = accounts; // backup
+  setAccounts((prev) =>
+    prev.map((acc) => (acc.id === updatedAccount.id ? updatedAccount : acc))
+  );
+
+  try {
     await simulateApiCall(updatedAccount);
-  };
+    console.log('Update berhasil');
+  } catch (error) {
+    console.error('Update gagal:', error);
+    // Rollback:
+    setAccounts(prevAccounts);
+    alert('Gagal memperbarui rekening. Perubahan dibatalkan.');
+  }
+};
 
-  const deleteAccount = async (id) => {
-    setAccounts((prev) => prev.filter((acc) => acc.id !== id));
+// ✅ Optimistic Delete
+const deleteAccount = async (id) => {
+  const prevAccounts = accounts; // backup
+  setAccounts((prev) => prev.filter((acc) => acc.id !== id));
+  setSelectedAccounts((prev) => prev.filter((accId) => accId !== id));
+
+  try {
     await simulateApiCall({ id });
-    setSelectedAccounts((prev) => prev.filter((accId) => accId !== id));
-  };
+    console.log('Hapus berhasil');
+  } catch (error) {
+    console.error('Hapus gagal:', error);
+    // Rollback:
+    setAccounts(prevAccounts);
+    alert('Gagal menghapus rekening. Perubahan dibatalkan.');
+  }
+};
 
-  const bulkDeleteAccounts = async () => {
-    setAccounts((prev) => prev.filter((acc) => !selectedAccounts.includes(acc.id)));
+// ✅ Optimistic Bulk Delete
+const bulkDeleteAccounts = async () => {
+  const prevAccounts = accounts; // backup
+  const prevSelected = selectedAccounts; // backup
+  setAccounts((prev) =>
+    prev.filter((acc) => !selectedAccounts.includes(acc.id))
+  );
+  setSelectedAccounts([]);
+
+  try {
     await simulateApiCall({ ids: selectedAccounts });
-    setSelectedAccounts([]);
-  };
+    console.log('Hapus massal berhasil');
+  } catch (error) {
+    console.error('Hapus massal gagal:', error);
+    // Rollback:
+    setAccounts(prevAccounts);
+    setSelectedAccounts(prevSelected);
+    alert('Gagal menghapus massal. Perubahan dibatalkan.');
+  }
+};
+
 
   return {
     accounts,

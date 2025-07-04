@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { profileDummy } from '../data/profileDummy';
+import { profileDummy } from '../../../utils/DummyData'
 
 export const useProfileData = () => {
   return useQuery({

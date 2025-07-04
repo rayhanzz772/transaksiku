@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { dashboardDummy } from '../data/dashboardDummy';
+import { dashboardDummy } from '../../../utils/DummyData'
 
 export const useDashboardData = () => {
   return useQuery({
