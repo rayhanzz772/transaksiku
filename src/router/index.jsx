@@ -14,7 +14,7 @@ import RenderRoute from './RenderRoute'; // ✅ Import
 const RootLayout = () => (
   <>
     <Navbar />
-    <div className="p-4">
+    <div className="">
       <Outlet />
     </div>
   </>
