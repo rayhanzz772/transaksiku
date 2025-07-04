@@ -5,10 +5,13 @@ import { useUserPreferences } from './context/UserPreferencesContext'; // Ganti 
 const Navbar = () => {
   const { isDarkMode, toggleDarkMode } = useUserPreferences();
 
-  const linkClass =
-    'px-4 py-2 rounded hover:bg-gray-400 hover:text-white transition-colors';
-
-  const activeClass = 'bg-white text-black';
+const linkClass = isDarkMode
+  ? 'px-4 py-2 rounded !text-white hover:bg-gray-700 transition-colors'
+  : 'px-4 py-2 rounded text-gray-800 hover:bg-gray-300 transition-colors';
+  
+const activeClass = isDarkMode
+  ? 'bg-gray-900 text-white'
+  : 'bg-white text-black';
 
   return (
     <nav className={`w-full ${isDarkMode ? 'bg-gray-800 text-gray-100' : 'bg-gray-200 text-gray-800'} shadow-md`}>

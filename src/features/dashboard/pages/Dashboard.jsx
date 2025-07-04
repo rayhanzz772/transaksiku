@@ -17,7 +17,7 @@ export default function Dashboard() {
       <div className={`container mx-auto p-6 ${isDarkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-lg`}>
         <h1 className="text-3xl font-bold mb-8 text-center">Overview Statistik Keuangan</h1>
         <StatCardGroup data={data} />
-        <DashboardCharts data={data} />
+        <DashboardCharts data={data} isDarkMode={isDarkMode} />
       </div>
     </div>
   );
